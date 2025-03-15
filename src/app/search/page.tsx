@@ -29,19 +29,25 @@ function toArabicNumber(num: number | string): string {
 const SearchPage = () => {
   const [surahs, setSurahs] = useState<Surah[]>([]); // Simpan semua surah
   const [searchQuery, setSearchQuery] = useState<string>(""); // Input pencarian
-  const [filteredVerses, setFilteredVerses] = useState<(Ayat & { surahName: string; surahNumber: string })[]>([]); // Hasil pencarian
+  const [filteredVerses, setFilteredVerses] = useState<Ayat[]>([]); // Hasil pencarian
   const [isLoading, setIsLoading] = useState<boolean>(false); // Indikator loading
-  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768); // Deteksi perangkat
+  const [isMobile, setIsMobile] = useState<boolean>(false); // Deteksi perangkat
 
   useEffect(() => {
-    // Mengecek ukuran layar
-    const checkScreenSize = () => setIsMobile(window.innerWidth < 768);
+    // Cek apakah kode berjalan di browser sebelum mengakses window
+    if (typeof window !== "undefined") {
+      const checkScreenSize = () => {
+        setIsMobile(window.innerWidth < 768);
+      };
 
-    window.addEventListener("resize", checkScreenSize);
-    return () => window.removeEventListener("resize", checkScreenSize);
+      checkScreenSize(); // Cek pertama kali
+      window.addEventListener("resize", checkScreenSize);
+
+      return () => window.removeEventListener("resize", checkScreenSize);
+    }
   }, []);
 
-  // Fetch data dari JSON hanya sekali
+  // Fetch data dari JSON hanya di client-side
   useEffect(() => {
     fetch("/data.json")
       .then((res) => res.json())
@@ -58,16 +64,17 @@ const SearchPage = () => {
     setIsLoading(true);
 
     setTimeout(() => {
-      const searchRegex = new RegExp(searchQuery, "i"); // Mengizinkan pencarian sebagian
-      const filtered: (Ayat & { surahName: string; surahNumber: string })[] = [];
+      const filtered: Ayat[] = [];
+      const searchRegex = new RegExp(`\\b${searchQuery}\\b`, "i");
 
       surahs.forEach((surah) => {
         surah.ayat.forEach((ayat) => {
-          if (searchRegex.test(ayat.id) || searchRegex.test(ayat.tr)) {
+          if (searchRegex.test(ayat.id)) {
             filtered.push({
               ...ayat,
               surahName: surah.nama, // Tambahkan nama surah
               surahNumber: surah.nomor, // Tambahkan nomor surah
+              verseNumber: ayat.nomor, // Tambahkan nomor ayat
             });
           }
         });
@@ -111,13 +118,21 @@ const SearchPage = () => {
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:{toArabicNumber(verse.nomor)} ]
+              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:
+              {toArabicNumber(verse.verseNumber)} ]
             </h2>
             <p
               className="text-2xl font-arabic m-2 text-right p-3"
-              style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}
+              style={{
+                fontFamily: "'Amiri', serif",
+                lineHeight: "3",
+                direction: "rtl",
+              }}
             >
-              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.nomor)})</span>
+              {verse.arabic}{" "}
+              <span className="inline-block text-lg text-gray-600">
+                ({toArabicNumber(verse.verseNumber)})
+              </span>
             </p>
             <p className="italic p-3" dangerouslySetInnerHTML={{ __html: verse.tr }} />
             <p className="text-gray-700 p-3">{verse.id}</p>
