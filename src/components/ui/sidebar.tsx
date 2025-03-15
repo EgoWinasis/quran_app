@@ -21,7 +21,7 @@ export default function Sidebar() {
   if (isMobile) {
     return (
       <header className="bg-gray-900 text-white p-4 flex justify-between items-center fixed top-0 w-full z-50 shadow-lg">
-        <h2 className="text-lg font-bold">Quran App</h2>
+        <h2 className="text-lg font-bold">Al-Quran App</h2>
         <button onClick={() => setIsOpen(!isOpen)} className="text-white">
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
