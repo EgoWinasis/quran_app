@@ -47,7 +47,7 @@ const SearchPage = () => {
     setIsLoading(true);
   
     setTimeout(() => {
-      const filtered = [];
+      const filtered: SurahType[] = [];
       const searchRegex = new RegExp(`\\b${searchQuery}\\b`, "i"); // Match whole word case-insensitively
   
       surahs.forEach((surah) => {
