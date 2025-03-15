@@ -4,29 +4,29 @@ import { useState, useEffect } from "react";
 
 // Interface untuk struktur data surah dan ayat
 interface Ayat {
-  nomor: number;
+  nomor: string;
   ar: string;
   tr: string;
   id: string;
-  surahName: string;
-  surahNumber: number;
-  verseNumber: number;
+  surahName?: string; // Tambahkan untuk menyimpan nama surah
+  surahNumber?: string; // Tambahkan untuk menyimpan nomor surah
+  verseNumber?: string; // Tambahkan untuk menyimpan nomor ayat
 }
 
 interface Surah {
-  nomor: number;
+  nomor: string;
   nama: string;
-  ayat: {
-    nomor: number;
-    ar: string;
-    tr: string;
-    id: string;
-  }[];
+  asma: string;
+  ayat: Ayat[];
+  arti: string;
+  type: string;
+  audio: string;
 }
 
 // Fungsi untuk mengubah angka menjadi angka Arab
-function toArabicNumber(num: number | string): string {
-  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+function toArabicNumber(num: number | string | undefined): string {
+  if (num === undefined) return "";
+  const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
   return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
 }
 
@@ -67,7 +67,7 @@ const SearchPage = () => {
 
     setTimeout(() => {
       const filtered: Ayat[] = [];
-      const searchRegex = new RegExp(`\\b${searchQuery}\\b`, "i");
+      const searchRegex = new RegExp(searchQuery, "i"); // Regex untuk mencari dalam terjemahan
 
       surahs.forEach((surah) => {
         surah.ayat.forEach((ayat) => {
@@ -89,7 +89,6 @@ const SearchPage = () => {
 
   return (
     <div className={`p-6 max-w-3xl mx-auto ${isMobile ? "mt-15" : "mt-0"}`}>
-
       <h1 className="text-2xl font-bold mb-4 text-center">Cari Ayat</h1>
 
       {/* Input Pencarian */}
@@ -124,7 +123,7 @@ const SearchPage = () => {
               {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:{toArabicNumber(verse.verseNumber)} ]
             </h2>
             <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
-              {verse.arabic} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber)})</span>
+              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber)})</span>
             </p>
             <p className="italic p-3" dangerouslySetInnerHTML={{ __html: verse.tr }} />
             <p className="text-gray-700 p-3">{verse.id}</p>
