@@ -121,7 +121,7 @@ const SearchPage = () => {
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber!)}:{toArabicNumber(verse.verseNumber!)} ]
+              {index + 1}. {verse.surahName} - [ {(verse.surahNumber!)}:{(verse.verseNumber!)} ]
             </h2>
             <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
               {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber!)})</span>
