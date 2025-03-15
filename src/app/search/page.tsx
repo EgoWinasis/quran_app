@@ -8,9 +8,6 @@ interface Ayat {
   ar: string;
   tr: string;
   id: string;
-  surahName?: string; // Tambahkan untuk menyimpan nama surah
-  surahNumber?: string; // Tambahkan untuk menyimpan nomor surah
-  verseNumber?: string; // Tambahkan untuk menyimpan nomor ayat
 }
 
 interface Surah {
@@ -24,8 +21,7 @@ interface Surah {
 }
 
 // Fungsi untuk mengubah angka menjadi angka Arab
-function toArabicNumber(num: number | string | undefined): string {
-  if (num === undefined) return "";
+function toArabicNumber(num: number | string): string {
   const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
   return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
 }
@@ -33,19 +29,15 @@ function toArabicNumber(num: number | string | undefined): string {
 const SearchPage = () => {
   const [surahs, setSurahs] = useState<Surah[]>([]); // Simpan semua surah
   const [searchQuery, setSearchQuery] = useState<string>(""); // Input pencarian
-  const [filteredVerses, setFilteredVerses] = useState<Ayat[]>([]); // Hasil pencarian
+  const [filteredVerses, setFilteredVerses] = useState<(Ayat & { surahName: string; surahNumber: string })[]>([]); // Hasil pencarian
   const [isLoading, setIsLoading] = useState<boolean>(false); // Indikator loading
-  const [isMobile, setIsMobile] = useState<boolean>(false); // Deteksi perangkat
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth < 768); // Deteksi perangkat
 
   useEffect(() => {
     // Mengecek ukuran layar
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const checkScreenSize = () => setIsMobile(window.innerWidth < 768);
 
-    checkScreenSize(); // Cek pertama kali
     window.addEventListener("resize", checkScreenSize);
-
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
@@ -66,17 +58,16 @@ const SearchPage = () => {
     setIsLoading(true);
 
     setTimeout(() => {
-      const filtered: Ayat[] = [];
-      const searchRegex = new RegExp(searchQuery, "i"); // Regex untuk mencari dalam terjemahan
+      const searchRegex = new RegExp(searchQuery, "i"); // Mengizinkan pencarian sebagian
+      const filtered: (Ayat & { surahName: string; surahNumber: string })[] = [];
 
       surahs.forEach((surah) => {
         surah.ayat.forEach((ayat) => {
-          if (searchRegex.test(ayat.id)) {
+          if (searchRegex.test(ayat.id) || searchRegex.test(ayat.tr)) {
             filtered.push({
               ...ayat,
               surahName: surah.nama, // Tambahkan nama surah
               surahNumber: surah.nomor, // Tambahkan nomor surah
-              verseNumber: ayat.nomor, // Tambahkan nomor ayat
             });
           }
         });
@@ -120,10 +111,13 @@ const SearchPage = () => {
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:{toArabicNumber(verse.verseNumber)} ]
+              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:{toArabicNumber(verse.nomor)} ]
             </h2>
-            <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
-              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber)})</span>
+            <p
+              className="text-2xl font-arabic m-2 text-right p-3"
+              style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}
+            >
+              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.nomor)})</span>
             </p>
             <p className="italic p-3" dangerouslySetInnerHTML={{ __html: verse.tr }} />
             <p className="text-gray-700 p-3">{verse.id}</p>
