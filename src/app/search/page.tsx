@@ -8,6 +8,9 @@ interface Ayat {
   ar: string;
   tr: string;
   id: string;
+  surahName?: string;  // ✅ Tambahkan properti opsional
+  surahNumber?: string;
+  verseNumber?: string;
 }
 
 interface Surah {
@@ -22,7 +25,7 @@ interface Surah {
 
 // Fungsi untuk mengubah angka menjadi angka Arab
 function toArabicNumber(num: number | string): string {
-  const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
 }
 
@@ -34,8 +37,8 @@ const SearchPage = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false); // Deteksi perangkat
 
   useEffect(() => {
-    // Cek apakah kode berjalan di browser sebelum mengakses window
     if (typeof window !== "undefined") {
+      // ✅ Cek apakah window tersedia sebelum mengaksesnya
       const checkScreenSize = () => {
         setIsMobile(window.innerWidth < 768);
       };
@@ -47,7 +50,7 @@ const SearchPage = () => {
     }
   }, []);
 
-  // Fetch data dari JSON hanya di client-side
+  // Fetch data dari JSON hanya sekali
   useEffect(() => {
     fetch("/data.json")
       .then((res) => res.json())
@@ -72,9 +75,9 @@ const SearchPage = () => {
           if (searchRegex.test(ayat.id)) {
             filtered.push({
               ...ayat,
-              surahName: surah.nama, // Tambahkan nama surah
-              surahNumber: surah.nomor, // Tambahkan nomor surah
-              verseNumber: ayat.nomor, // Tambahkan nomor ayat
+              surahName: surah.nama, // ✅ Tambahkan nama surah
+              surahNumber: surah.nomor, // ✅ Tambahkan nomor surah
+              verseNumber: ayat.nomor, // ✅ Tambahkan nomor ayat
             });
           }
         });
@@ -118,21 +121,10 @@ const SearchPage = () => {
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:
-              {toArabicNumber(verse.verseNumber)} ]
+              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber!)}:{toArabicNumber(verse.verseNumber!)} ]
             </h2>
-            <p
-              className="text-2xl font-arabic m-2 text-right p-3"
-              style={{
-                fontFamily: "'Amiri', serif",
-                lineHeight: "3",
-                direction: "rtl",
-              }}
-            >
-              {verse.arabic}{" "}
-              <span className="inline-block text-lg text-gray-600">
-                ({toArabicNumber(verse.verseNumber)})
-              </span>
+            <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
+              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber!)})</span>
             </p>
             <p className="italic p-3" dangerouslySetInnerHTML={{ __html: verse.tr }} />
             <p className="text-gray-700 p-3">{verse.id}</p>
