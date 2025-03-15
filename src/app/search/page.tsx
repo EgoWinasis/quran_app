@@ -2,60 +2,67 @@
 
 import { useState, useEffect } from "react";
 
+// Interface untuk struktur data surah dan ayat
 interface Ayat {
   nomor: number;
   ar: string;
   tr: string;
   id: string;
-  surahName?: string; // Ditambahkan untuk menyimpan nama surah
-  surahNumber?: number; // Ditambahkan untuk menyimpan nomor surah
-  verseNumber?: number; // Nomor ayat dalam surah
+  surahName: string;
+  surahNumber: number;
+  verseNumber: number;
 }
 
 interface Surah {
   nomor: number;
   nama: string;
-  ayat: Ayat[];
+  ayat: {
+    nomor: number;
+    ar: string;
+    tr: string;
+    id: string;
+  }[];
 }
 
+// Fungsi untuk mengubah angka menjadi angka Arab
 function toArabicNumber(num: number | string): string {
   const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
 }
 
 const SearchPage = () => {
-  const [surahs, setSurahs] = useState<Surah[]>([]); // Data lengkap Quran
-  const [searchQuery, setSearchQuery] = useState(""); // Input pencarian
+  const [surahs, setSurahs] = useState<Surah[]>([]); // Simpan semua surah
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Input pencarian
   const [filteredVerses, setFilteredVerses] = useState<Ayat[]>([]); // Hasil pencarian
-  const [isLoading, setIsLoading] = useState(false); // Status loading
-  const [isMobile, setIsMobile] = useState(false); // Deteksi mode mobile
+  const [isLoading, setIsLoading] = useState<boolean>(false); // Indikator loading
+  const [isMobile, setIsMobile] = useState<boolean>(false); // Deteksi perangkat
 
   useEffect(() => {
-    // Deteksi ukuran layar
+    // Mengecek ukuran layar
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
     };
 
-    checkScreenSize();
+    checkScreenSize(); // Cek pertama kali
     window.addEventListener("resize", checkScreenSize);
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Fetch data Quran dari JSON
+  // Fetch data dari JSON hanya sekali
   useEffect(() => {
     fetch("/data.json")
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: Surah[]) => {
         console.log("Loaded JSON Data:", data);
         setSurahs(data);
       })
       .catch((err) => console.error("Error loading Quran:", err));
   }, []);
 
-
+  // Fungsi untuk melakukan pencarian
   const handleSearch = () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) return; // Cegah pencarian kosong
     setIsLoading(true);
 
     setTimeout(() => {
@@ -67,9 +74,9 @@ const SearchPage = () => {
           if (searchRegex.test(ayat.id)) {
             filtered.push({
               ...ayat,
-              surahName: surah.nama, // Simpan nama surah
-              surahNumber: surah.nomor, // Simpan nomor surah
-              verseNumber: ayat.nomor, // Simpan nomor ayat
+              surahName: surah.nama, // Tambahkan nama surah
+              surahNumber: surah.nomor, // Tambahkan nomor surah
+              verseNumber: ayat.nomor, // Tambahkan nomor ayat
             });
           }
         });
@@ -77,11 +84,12 @@ const SearchPage = () => {
 
       setFilteredVerses(filtered);
       setIsLoading(false);
-    }, 500);
+    }, 500); // Simulasi loading
   };
 
   return (
     <div className={`p-6 max-w-3xl mx-auto ${isMobile ? "mt-15" : "mt-0"}`}>
+
       <h1 className="text-2xl font-bold mb-4 text-center">Cari Ayat</h1>
 
       {/* Input Pencarian */}
@@ -101,22 +109,22 @@ const SearchPage = () => {
         </button>
       </div>
 
-      {/* Spinner Loading */}
+      {/* Loading Spinner */}
       {isLoading && (
         <div className="flex justify-center items-center py-4">
           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
-      {/* Menampilkan Hasil Pencarian */}
+      {/* Hasil Pencarian */}
       {filteredVerses.length > 0 ? (
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber!)}:{toArabicNumber(verse.verseNumber!)} ]
+              {index + 1}. {verse.surahName} - [ {toArabicNumber(verse.surahNumber)}:{toArabicNumber(verse.verseNumber)} ]
             </h2>
             <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
-              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber!)})</span>
+              {verse.arabic} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber)})</span>
             </p>
             <p className="italic p-3" dangerouslySetInnerHTML={{ __html: verse.tr }} />
             <p className="text-gray-700 p-3">{verse.id}</p>
