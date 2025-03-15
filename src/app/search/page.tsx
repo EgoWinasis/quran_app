@@ -1,22 +1,33 @@
 "use client";
 
-
 import { useState, useEffect } from "react";
 
+// Define interfaces for TypeScript
+interface Ayat {
+  nomor: number;
+  ar: string;
+  tr: string;
+  id: string;
+}
 
+interface Surah {
+  nomor: number;
+  nama: string;
+  ayat: Ayat[];
+}
 
+// Convert numbers to Arabic numerals
 function toArabicNumber(num: number | string): string {
-    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
-  }
+  const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return num.toString().replace(/\d/g, (digit) => arabicNumbers[parseInt(digit)]);
+}
 
 const SearchPage = () => {
-  const [surahs, setSurahs] = useState([]); // Store all surahs
+  const [surahs, setSurahs] = useState<Surah[]>([]); // Store all surahs
   const [searchQuery, setSearchQuery] = useState(""); // User input
-  const [filteredVerses, setFilteredVerses] = useState([]); // Filtered results
+  const [filteredVerses, setFilteredVerses] = useState<Ayat[]>([]); // Filtered results
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [isMobile, setIsMobile] = useState(false);
-
 
   useEffect(() => {
     // Function to check screen width
@@ -34,7 +45,7 @@ const SearchPage = () => {
   useEffect(() => {
     fetch("/data.json")
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: Surah[]) => {
         console.log("Loaded JSON Data:", data);
         setSurahs(data);
       })
@@ -47,29 +58,24 @@ const SearchPage = () => {
     setIsLoading(true);
   
     setTimeout(() => {
-      const filtered: { id: number; name: string; audio: string }[] = [];
+      const filtered: Ayat[] = [];
       const searchRegex = new RegExp(`\\b${searchQuery}\\b`, "i"); // Match whole word case-insensitively
   
       surahs.forEach((surah) => {
         surah.ayat.forEach((ayat) => {
           if (searchRegex.test(ayat.id)) { // Check whole word match
             filtered.push({
-              surahNumber: surah.nomor,
-              surahName: surah.nama,
-              verseNumber: ayat.nomor,
-              arabic: ayat.ar,
-              transliteration: ayat.tr,
-              translation: ayat.id,
+              ...ayat,
+              nomor: ayat.nomor,
             });
           }
         });
       });
-  
+
       setFilteredVerses(filtered);
       setIsLoading(false);
     }, 500); // Simulating lazy loading (debounce effect)
   };
-  
 
   return (
     <div className={`p-6 max-w-3xl mx-auto ${isMobile ? "mt-15" : "mt-0"}`}>
@@ -105,16 +111,16 @@ const SearchPage = () => {
         filteredVerses.map((verse, index) => (
           <div key={index} className="p-4 border-b">
             <h2 className="text-lg font-bold">
-              {++index}. {verse.surahName} - [ {verse.surahNumber}:{verse.verseNumber} ]
+              {index + 1}. [ {toArabicNumber(verse.nomor)} ]
             </h2>
             <p className="text-2xl font-arabic m-2 text-right p-3" style={{ fontFamily: "'Amiri', serif", lineHeight: "3", direction: "rtl" }}>
-                    {verse.arabic} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.verseNumber)})</span>
-                  </p>
+              {verse.ar} <span className="inline-block text-lg text-gray-600">({toArabicNumber(verse.nomor)})</span>
+            </p>
             <p
               className="italic p-3"
-              dangerouslySetInnerHTML={{ __html: verse.transliteration }}
+              dangerouslySetInnerHTML={{ __html: verse.tr }}
             />
-            <p className="text-gray-700 p-3">{verse.translation}</p>
+            <p className="text-gray-700 p-3">{verse.id}</p>
           </div>
         ))
       ) : (
